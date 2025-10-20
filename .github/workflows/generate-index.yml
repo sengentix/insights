@@ -1,0 +1,45 @@
+name: Generate Article Index
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "*.md"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate README index
+        run: |
+          echo "# Sengentix Insights" > README.md
+          echo "*Official Technical Articles & Case Studies by Sengentix Technology Co., Ltd.*" >> README.md
+          echo "" >> README.md
+          echo "Welcome to **Sengentix Insights**, our official collection of articles on Website Development, PWA, SaaS, and Custom Software Solutions." >> README.md
+          echo "" >> README.md
+          echo "## 📚 Latest Articles" >> README.md
+          echo "| Date | Title | Canonical Link |" >> README.md
+          echo "|------|--------|----------------|" >> README.md
+
+          for file in $(ls -t *.md); do
+            TITLE=$(grep -m1 "^# " "$file" | sed 's/# //')
+            CANONICAL=$(grep -m1 "https://www.sengentix.com/insights/" "$file" | head -n1)
+            DATE=$(echo $file | cut -d'-' -f1-3)
+            echo "| $DATE | [$TITLE]($file) | [$CANONICAL]($CANONICAL) |" >> README.md
+          done
+
+          echo "" >> README.md
+          echo "© 2025 Sengentix Technology Co., Ltd. • All rights reserved." >> README.md
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add README.md
+          git commit -m "Auto-update README with latest articles" || echo "No changes to commit"
+          git push
